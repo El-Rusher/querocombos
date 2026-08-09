@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quero combos e lanches | Cardápio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Otimizações nativas para Android / Mobile */
+    body {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    input, select, textarea {
+      font-size: 16px !important; /* Evita auto-zoom no Android Chrome */
+    }
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 1rem);
+    }
+  </style>
+  
+  <!-- Google Maps API (Substitua 'SUA_CHAVE_API_AQUI' pela sua chave do Google Cloud Console) -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE_API_AQUI&libraries=places"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 pb-28 font-sans antialiased">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-purple-800 to-indigo-900 text-white shadow-md sticky top-0 z-20">
+    <div class="max-w-xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div>
+        <h1 class="text-lg sm:text-xl font-bold tracking-tight">Quero combos e lanches</h1>
+        <p class="text-xs text-purple-200 flex items-center gap-1.5 mt-0.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span> Aberto para pedidos
+        </p>
+      </div>
+      <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+        <i class="fa-solid fa-utensils text-purple-200 text-lg"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 pt-3">
+
+    <!-- Navegação de Categorias -->
+    <nav class="flex gap-2 overflow-x-auto no-scrollbar pb-2 pt-1 border-b border-slate-200/80 sticky top-[60px] bg-slate-100 z-10">
+      <button onclick="filterCategory('todos')" id="btn-cat-todos" class="category-btn bg-purple-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition active:scale-95">
+        ✨ Todos
+      </button>
+      <button onclick="filterCategory('Sobremesas')" id="btn-cat-Sobremesas" class="category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95">
+        🍰 Sobremesas
+      </button>
+      <button onclick="filterCategory('Cachorro Quente')" id="btn-cat-Cachorro-Quente" class="category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95">
+        🌭 Cachorro Quente
+      </button>
+      <button onclick="filterCategory('Lanches Tradicionais')" id="btn-cat-Lanches-Tradicionais" class="category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95">
+        🍔 Lanches Tradicionais
+      </button>
+      <button onclick="filterCategory('Lanches Artesanais')" id="btn-cat-Lanches-Artesanais" class="category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95">
+        🥩 Lanches Artesanais
+      </button>
+      <button onclick="filterCategory('Porções')" id="btn-cat-Porções" class="category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95">
+        🍟 Porções
+      </button>
+      <button onclick="filterCategory('Bebidas')" id="btn-cat-Bebidas" class="category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95">
+        🥤 Bebidas
+      </button>
+      <button onclick="filterCategory('Combos de Lanches')" id="btn-cat-Combos-de-Lanches" class="category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95">
+        📦 Combos de Lanches
+      </button>
+      <button onclick="filterCategory('Combos de Porções')" id="btn-cat-Combos-de-Porções" class="category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95">
+        📦 Combos de Porções
+      </button>
+    </nav>
+
+    <!-- Lista de Produtos Agrupados -->
+    <div id="menu-sections" class="mt-4 space-y-6"></div>
+  </main>
+
+  <!-- Barra Fixa do Carrinho -->
+  <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] p-3.5 z-30 hidden pb-safe">
+    <div class="max-w-xl mx-auto flex items-center justify-between gap-3">
+      <div>
+        <p id="cart-count" class="text-xs text-slate-500 font-medium">0 itens</p>
+        <p id="cart-total" class="text-base sm:text-lg font-bold text-slate-900">R$ 0,00</p>
+      </div>
+      <button onclick="openCartModal()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-5 py-3 rounded-xl flex items-center gap-2 transition active:scale-95 shadow-md text-sm">
+        <span>Ver Carrinho</span>
+        <i class="fa-solid fa-arrow-right text-xs"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal de Personalização do Produto -->
+  <div id="product-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+      
+      <!-- Cabeçalho sem imagem com banner estilizado -->
+      <div class="bg-gradient-to-r from-purple-700 to-indigo-800 p-4 text-white relative">
+        <button onclick="closeProductModal()" class="absolute top-3.5 right-3.5 bg-black/30 hover:bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+        <div class="pr-8">
+          <span id="modal-category-badge" class="inline-block bg-white/20 text-purple-100 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1"></span>
+          <h3 id="modal-title" class="font-bold text-white text-base sm:text-lg leading-snug"></h3>
+          <p id="modal-description" class="text-xs text-purple-100 mt-1 leading-relaxed opacity-90"></p>
+        </div>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-4 flex-1">
+        <div id="variant-section" class="bg-purple-50/60 p-3.5 rounded-xl border border-purple-100">
+          <p id="modal-variant-title" class="font-bold text-xs sm:text-sm text-purple-950 mb-2.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-dot text-purple-700 text-xs"></i> Escolha a opção:
+          </p>
+          <div id="variants-container" class="space-y-2"></div>
+        </div>
+
+        <div id="options-section" class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+          <div class="flex justify-between items-center mb-2.5">
+            <div>
+              <p id="modal-options-title" class="font-bold text-xs sm:text-sm text-slate-800"></p>
+              <p id="modal-options-subtitle" class="text-[11px] text-slate-500"></p>
+            </div>
+            <span id="options-counter" class="text-[11px] font-semibold bg-purple-100 text-purple-800 px-2.5 py-1 rounded-full whitespace-nowrap"></span>
+          </div>
+          <div id="options-container" class="space-y-2 pt-1"></div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3 pb-safe">
+        <div class="flex items-center border border-slate-200 rounded-xl bg-slate-50">
+          <button onclick="changeQty(-1)" class="w-10 h-10 text-slate-600 font-bold text-lg hover:bg-slate-200/50 rounded-l-xl flex items-center justify-center active:scale-95">-</button>
+          <span id="modal-qty" class="w-8 text-center font-bold text-slate-800 text-sm">1</span>
+          <button onclick="changeQty(1)" class="w-10 h-10 text-slate-600 font-bold text-lg hover:bg-slate-200/50 rounded-r-xl flex items-center justify-center active:scale-95">+</button>
+        </div>
+        <button onclick="addToCart()" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-between transition shadow-md active:scale-95 text-sm">
+          <span>Adicionar</span>
+          <span id="modal-total-price">R$ 0,00</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal do Carrinho -->
+  <div id="cart-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 class="font-bold text-slate-800 text-base sm:text-lg flex items-center gap-2">
+          <i class="fa-solid fa-cart-shopping text-purple-700"></i> Seu Pedido
+        </h3>
+        <button onclick="closeCartModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="cart-items-container" class="p-4 overflow-y-auto space-y-3 flex-1"></div>
+
+      <!-- Resumo do Endereço e Frete -->
+      <div id="cart-delivery-summary" class="bg-slate-50/80 p-4 border-t border-slate-100 text-xs text-slate-600 space-y-2">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-location-dot text-purple-700"></i> Entrega
+          </span>
+          <button onclick="openAddressModal()" class="text-purple-700 font-bold text-xs hover:underline flex items-center gap-1 py-1 px-2 bg-purple-50 rounded-lg border border-purple-100">
+            <i class="fa-solid fa-pen-to-square"></i> <span id="address-btn-text">Cadastrar Endereço</span>
+          </button>
+        </div>
+        <p id="summary-address-text" class="text-slate-500 italic">Nenhum endereço cadastrado.</p>
+        <div class="pt-2 border-t border-slate-200/70 flex justify-between items-center text-xs">
+          <span>Subtotal:</span>
+          <span id="cart-subtotal" class="font-semibold text-slate-800">R$ 0,00</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span>Taxa de Entrega (<span id="cart-distance-text">0 km</span>):</span>
+          <span id="cart-delivery-fee" class="font-semibold text-purple-800">R$ 0,00</span>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 space-y-3 bg-white pb-safe">
+        <div class="flex justify-between items-center font-bold text-slate-800 text-base sm:text-lg">
+          <span>Total Final</span>
+          <span id="cart-final-total" class="text-purple-800">R$ 0,00</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="clearCart()" class="px-4 py-3 border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 text-xs sm:text-sm active:scale-95 transition">Limpar</button>
+          <button onclick="processCheckout()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md active:scale-95 text-xs sm:text-sm transition">
+            <i class="fa-brands fa-whatsapp text-lg"></i>
+            <span>Enviar Pedido</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Endereço do Cliente -->
+  <div id="address-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+      <div class="p-4 bg-purple-700 text-white flex justify-between items-center">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-house"></i> Dados para Entrega
+        </h3>
+        <button onclick="closeAddressModal()" class="text-white/80 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 overflow-y-auto">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Seu Nome *</label>
+          <input type="text" id="user-name" placeholder="Ex: Guilherme" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Rua / Avenida e Bairro (ou CEP) *</label>
+          <input type="text" id="user-street" placeholder="Ex: Av. Visconde de Taunay, Rondônia" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Número *</label>
+            <input type="text" id="user-number" placeholder="Ex: 150" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Complemento</label>
+            <input type="text" id="user-complement" placeholder="Ex: Ap 102 / Bloco B" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600">
+          </div>
+        </div>
+
+        <p class="text-[11px] text-slate-600 bg-purple-50 p-2.5 rounded-xl border border-purple-100 flex items-start gap-1.5 leading-relaxed">
+          <i class="fa-solid fa-circle-info text-purple-700 text-xs mt-0.5"></i>
+          <span>Até 3 km da loja a entrega é <strong>GRÁTIS</strong>! Acima disso calculamos a taxa via Google Maps.</span>
+        </p>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex gap-2 pb-safe">
+        <button onclick="closeAddressModal()" class="px-4 py-3 text-xs font-bold text-slate-600 border border-slate-300 rounded-xl hover:bg-slate-100 active:scale-95">Cancelar</button>
+        <button onclick="saveAddressAndCalculate()" id="btn-save-address" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 active:scale-95 transition">
+          <span>Calcular Taxa e Salvar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORE_ADDRESS = "Rua Expedicionario Guilherme Scheidt, 243, Cara-Cara, Ponta Grossa - PR, 84033-148";
+    const TARGET_WHATSAPP = "5542998093599";
+
+    const CATEGORY_ICONS = {
+      'Sobremesas': '🍰',
+      'Cachorro Quente': '🌭',
+      'Lanches Tradicionais': '🍔',
+      'Lanches Artesanais': '🥩',
+      'Porções': '🍟',
+      'Bebidas': '🥤',
+      'Combos de Lanches': '📦',
+      'Combos de Porções': '📦'
+    };
+
+    const SECTION_ORDER = [
+      'Sobremesas',
+      'Cachorro Quente',
+      'Lanches Tradicionais',
+      'Lanches Artesanais',
+      'Porções',
+      'Bebidas',
+      'Combos de Lanches',
+      'Combos de Porções'
+    ];
+
+    // Produtos com preços ajustados: (+R$ 5,00) e desconto de 30% em seguida
+    const products = [
+      // SOBREMESAS
+      {
+        id: 'acai',
+        category: 'Sobremesas',
+        subcategory: 'Sobremesas',
+        title: 'Copo de Açaí + 3 Acompanhamentos Grátis',
+        startPrice: 20.99,
+        description: 'Açaí gelado com guaraná. Escolha o tamanho ideal e até 3 acompanhamentos sem custo extra!',
+        variantTitle: 'Tamanho do Copo:',
+        variants: [
+          { name: 'Copo 300ml', price: 20.99 },
+          { name: 'Copo 400ml', price: 24.49 },
+          { name: 'Copo 500ml', price: 27.99 }
+        ],
+        optionsGroup: {
+          title: 'Escolha seus 3 Acompanhamentos Grátis',
+          subtitle: 'Selecione até 3 opções',
+          type: 'add',
+          max: 3,
+          options: ['Leite em pó', 'Paçoquinha', 'Mix de cereais', 'Tubete de chocolate', 'Leite condensado', 'Creme de avelã', 'Banana', 'Morango']
+        }
+      },
+      {
+        id: 'pacoquinha',
+        category: 'Sobremesas',
+        subcategory: 'Sobremesas',
+        title: 'Paçoquinha',
+        startPrice: 4.55,
+        description: 'Deliciosa paçoquinha individual de amendoim.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Unidade', price: 4.55 }]
+      },
+
+      // CACHORRO QUENTE
+      {
+        id: 'hotdog',
+        category: 'Cachorro Quente',
+        subcategory: 'Cachorro Quente',
+        title: 'Cachorro Quente Tradicional',
+        startPrice: 13.99,
+        description: 'Pão de hotdog, batata palha, milho, ervilha, ketchup, mostarda e cebola.',
+        variantTitle: 'Quantidade de Salsichas:',
+        variants: [
+          { name: '1 Salsicha', price: 13.99 },
+          { name: '2 Salsichas', price: 16.09 },
+          { name: '3 Salsichas', price: 18.19 }
+        ],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 6,
+          options: ['Cebola', 'Milho', 'Ervilha', 'Batata palha', 'Ketchup', 'Mostarda']
+        }
+      },
+
+      // LANCHES TRADICIONAIS
+      {
+        id: 'x-burguer-trad',
+        category: 'Lanches Tradicionais',
+        subcategory: 'Lanches Tradicionais',
+        title: 'X-Burguer',
+        startPrice: 13.99,
+        description: 'Pão, maionese, hambúrguer tradicional, batata palha, presunto e queijo.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Tradicional', price: 13.99 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 5,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo']
+        }
+      },
+      {
+        id: 'x-salada-trad',
+        category: 'Lanches Tradicionais',
+        subcategory: 'Lanches Tradicionais',
+        title: 'X-Salada',
+        startPrice: 16.09,
+        description: 'Pão, maionese, hambúrguer tradicional, batata palha, presunto, queijo, tomate e alface.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Tradicional', price: 16.09 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 7,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface']
+        }
+      },
+      {
+        id: 'x-bacon-trad',
+        category: 'Lanches Tradicionais',
+        subcategory: 'Lanches Tradicionais',
+        title: 'X-Bacon',
+        startPrice: 23.09,
+        description: 'Pão, maionese, hambúrguer tradicional, batata palha, presunto, queijo, tomate, alface e bacon crocante.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Tradicional', price: 23.09 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 8,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface', 'Bacon']
+        }
+      },
+      {
+        id: 'x-frango-trad',
+        category: 'Lanches Tradicionais',
+        subcategory: 'Lanches Tradicionais',
+        title: 'X-Frango',
+        startPrice: 24.49,
+        description: 'Pão, maionese, hambúrguer tradicional, batata palha, presunto, queijo, tomate, alface e frango grelhado.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Tradicional', price: 24.49 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 8,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface', 'Frango']
+        }
+      },
+      {
+        id: 'x-calabresa-trad',
+        category: 'Lanches Tradicionais',
+        subcategory: 'Lanches Tradicionais',
+        title: 'X-Calabresa',
+        startPrice: 23.09,
+        description: 'Pão, maionese, hambúrguer tradicional, batata palha, presunto, queijo, tomate, alface e calabresa fatiada.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Tradicional', price: 23.09 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 8,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface', 'Calabresa']
+        }
+      },
+      {
+        id: 'x-tudo-trad',
+        category: 'Lanches Tradicionais',
+        subcategory: 'Lanches Tradicionais',
+        title: 'X-Tudo',
+        startPrice: 31.49,
+        description: 'Pão, maionese, hambúrguer, presunto, queijo, batata palha, tomate, alface, cheddar, catupiry, frango, bacon e calabresa.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Tradicional', price: 31.49 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 12,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface', 'Cheddar', 'Catupiry', 'Frango', 'Bacon', 'Calabresa']
+        }
+      },
+
+      // LANCHES ARTESANAIS
+      {
+        id: 'burger-artesanal',
+        category: 'Lanches Artesanais',
+        subcategory: 'Lanches Artesanais',
+        title: 'Burger Artesanal',
+        startPrice: 17.49,
+        description: 'Pão, maionese, hambúrguer artesanal de 100g, batata palha, presunto e queijo.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Artesanal 100g', price: 17.49 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 5,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo']
+        }
+      },
+      {
+        id: 'x-salada-artesanal',
+        category: 'Lanches Artesanais',
+        subcategory: 'Lanches Artesanais',
+        title: 'X-Salada Artesanal',
+        startPrice: 20.29,
+        description: 'Pão, maionese, hambúrguer artesanal de 100g, batata palha, presunto, queijo, tomate e alface.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Artesanal 100g', price: 20.29 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 7,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface']
+        }
+      },
+      {
+        id: 'x-bacon-artesanal',
+        category: 'Lanches Artesanais',
+        subcategory: 'Lanches Artesanais',
+        title: 'X-Bacon Artesanal',
+        startPrice: 25.89,
+        description: 'Pão, maionese, hambúrguer artesanal de 100g, batata palha, presunto, queijo, tomate, alface e bacon crocante.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Artesanal 100g', price: 25.89 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 8,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface', 'Bacon']
+        }
+      },
+      {
+        id: 'x-frango-artesanal',
+        category: 'Lanches Artesanais',
+        subcategory: 'Lanches Artesanais',
+        title: 'X-Frango Artesanal',
+        startPrice: 25.89,
+        description: 'Pão, maionese, hambúrguer artesanal de 100g, batata palha, presunto, queijo, tomate, alface e frango grelhado.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Artesanal 100g', price: 25.89 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 8,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface', 'Frango']
+        }
+      },
+      {
+        id: 'x-calabresa-artesanal',
+        category: 'Lanches Artesanais',
+        subcategory: 'Lanches Artesanais',
+        title: 'X-Calabresa Artesanal',
+        startPrice: 25.89,
+        description: 'Pão, maionese, hambúrguer artesanal de 100g, batata palha, presunto, queijo, tomate, alface e calabresa fatiada.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Artesanal 100g', price: 25.89 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 8,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface', 'Calabresa']
+        }
+      },
+      {
+        id: 'x-tudo-artesanal',
+        category: 'Lanches Artesanais',
+        subcategory: 'Lanches Artesanais',
+        title: 'X-Tudo Artesanal',
+        startPrice: 35.69,
+        description: 'Pão, maionese, hambúrguer artesanal de 100g, presunto, queijo, batata palha, tomate, alface, cheddar, catupiry, frango, bacon e calabresa.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Artesanal 100g', price: 35.69 }],
+        optionsGroup: {
+          title: 'Deseja retirar algum ingrediente?',
+          subtitle: 'Marque apenas o que deseja REMOVER',
+          type: 'remove',
+          max: 12,
+          options: ['Maionese', 'Batata palha', 'Presunto', 'Queijo', 'Tomate', 'Alface', 'Cheddar', 'Catupiry', 'Frango', 'Bacon', 'Calabresa']
+        }
+      },
+
+      // PORÇÕES
+      {
+        id: 'batata-frita-400',
+        category: 'Porções',
+        subcategory: 'Porções',
+        title: 'Batata Frita (400g)',
+        startPrice: 23.09,
+        description: 'Porção de 400g de batata frita bem sequinha e crocante.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Porção 400g', price: 23.09 }]
+      },
+      {
+        id: 'frango-passarinho-400',
+        category: 'Porções',
+        subcategory: 'Porções',
+        title: 'Frango a Passarinho (400g)',
+        startPrice: 25.19,
+        description: 'Porção de 400g de frango a passarinho dourado e temperado.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Porção 400g', price: 25.19 }]
+      },
+      {
+        id: 'calabresa-400',
+        category: 'Porções',
+        subcategory: 'Porções',
+        title: 'Calabresa Acebolada (400g)',
+        startPrice: 27.99,
+        description: 'Porção de 400g de calabresa fatiada acebolada.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Porção 400g', price: 27.99 }]
+      },
+
+      // BEBIDAS
+      {
+        id: 'refri-uliana-2l',
+        category: 'Bebidas',
+        subcategory: 'Bebidas',
+        title: 'Refrigerante Uliana 2L',
+        startPrice: 11.89,
+        description: 'Refrigerante 2 Litros geladinho. Escolha o seu sabor favorito.',
+        variantTitle: 'Escolha o Sabor:',
+        variants: [
+          { name: 'Uliana Cola 2L', price: 11.89 },
+          { name: 'Uliana Guaraná 2L', price: 11.89 },
+          { name: 'Uliana Framboesa 2L', price: 11.89 },
+          { name: 'Uliana Laranja 2L', price: 11.89 }
+        ]
+      },
+      {
+        id: 'coca-2l',
+        category: 'Bebidas',
+        subcategory: 'Bebidas',
+        title: 'Coca-Cola 2L',
+        startPrice: 18.89,
+        description: 'Garrafa de Coca-Cola 2 Litros gelada.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Garrafa 2L', price: 18.89 }]
+      },
+      {
+        id: 'coca-lata',
+        category: 'Bebidas',
+        subcategory: 'Bebidas',
+        title: 'Coca-Cola Lata 350ml',
+        startPrice: 10.49,
+        description: 'Lata 350ml gelada.',
+        variantTitle: 'Opção:',
+        variants: [{ name: 'Lata 350ml', price: 10.49 }]
+      },
+
+      // COMBOS DE LANCHES
+      {
+        id: 'combo-premium',
+        category: 'Combos de Lanches',
+        subcategory: 'Combos de Lanches',
+        title: 'Combo Premium (Lanche + 400g Fritas)',
+        startPrice: 31.49,
+        description: 'Escolha o seu lanche preferido acompanhado de 400g de batata frita bem crocante!',
+        variantTitle: 'Escolha o Lanche do Combo:',
+        variants: [
+          { name: 'Com X-Salada Tradicional', price: 31.49 },
+          { name: 'Com X-Bacon Tradicional', price: 38.49 },
+          { name: 'Com X-Frango Tradicional', price: 39.89 },
+          { name: 'Com X-Tudo Tradicional', price: 46.89 },
+          { name: 'Com X-Salada Artesanal (100g)', price: 35.69 },
+          { name: 'Com X-Bacon Artesanal (100g)', price: 41.29 },
+          { name: 'Com X-Frango Artesanal (100g)', price: 41.29 },
+          { name: 'Com X-Tudo Artesanal (100g)', price: 51.09 }
+        ]
+      },
+      {
+        id: 'combo-ug',
+        category: 'Combos de Lanches',
+        subcategory: 'Combos de Lanches',
+        title: 'Combo UG (Lanche + 500g Fritas + 500g Frango)',
+        startPrice: 52.49,
+        description: 'Combo reforçado: Seu lanche escolhido + 500g de Fritas + 500g de Frango a passarinho.',
+        variantTitle: 'Escolha o Lanche do Combo:',
+        variants: [
+          { name: 'Com X-Salada Tradicional', price: 52.49 },
+          { name: 'Com X-Bacon Tradicional', price: 59.49 },
+          { name: 'Com X-Frango Tradicional', price: 60.89 },
+          { name: 'Com X-Tudo Tradicional', price: 67.89 },
+          { name: 'Com X-Salada Artesanal (100g)', price: 56.69 },
+          { name: 'Com X-Bacon Artesanal (100g)', price: 62.29 },
+          { name: 'Com X-Frango Artesanal (100g)', price: 62.29 },
+          { name: 'Com X-Tudo Artesanal (100g)', price: 72.09 }
+        ]
+      },
+      {
+        id: 'combo-master',
+        category: 'Combos de Lanches',
+        subcategory: 'Combos de Lanches',
+        title: 'Combo Master (+ Trio 300g Porções + Refri 2L Grátis)',
+        startPrice: 59.49,
+        description: 'Lanche + 300g de Frango + 300g de Fritas + 300g de Calabresa + Refrigerante Uliana 2L grátis!',
+        variantTitle: 'Escolha o Lanche do Combo:',
+        variants: [
+          { name: 'Com X-Salada Tradicional', price: 59.49 },
+          { name: 'Com X-Bacon Tradicional', price: 66.49 },
+          { name: 'Com X-Frango Tradicional', price: 67.89 },
+          { name: 'Com X-Tudo Tradicional', price: 74.89 },
+          { name: 'Com X-Salada Artesanal (100g)', price: 63.69 },
+          { name: 'Com X-Bacon Artesanal (100g)', price: 69.29 },
+          { name: 'Com X-Frango Artesanal (100g)', price: 69.29 },
+          { name: 'Com X-Tudo Artesanal (100g)', price: 79.09 }
+        ],
+        optionsGroup: {
+          title: 'Escolha o Refrigerante 2L Grátis:',
+          subtitle: 'Selecione 1 sabor de Uliana 2L',
+          type: 'add',
+          max: 1,
+          options: ['Uliana Cola 2L', 'Uliana Guaraná 2L', 'Uliana Framboesa 2L', 'Uliana Laranja 2L']
+        }
+      },
+
+      // COMBOS DE PORÇÕES
+      {
+        id: 'combo-porcao-trio',
+        category: 'Combos de Porções',
+        subcategory: 'Combos de Porções',
+        title: 'Combo Trio de Porções (Frango + Calabresa + Fritas)',
+        startPrice: 53.19,
+        description: 'Combo completo de porções mistas de Frango a Passarinho, Calabresa e Fritas.',
+        variantTitle: 'Escolha a Quantidade de Cada Item:',
+        variants: [
+          { name: '300g de cada (900g total)', price: 53.19 },
+          { name: '400g de cada (1.2kg total)', price: 63.69 },
+          { name: '500g de cada (1.5kg total)', price: 73.49 }
+        ]
+      }
+    ];
+
+    // Estados da Aplicação
+    let currentCategory = 'todos';
+    let currentProduct = null;
+    let selectedVariant = null;
+    let selectedOptions = [];
+    let currentQty = 1;
+    let cart = JSON.parse(localStorage.getItem('cart_quero_combos')) || [];
+    let customerData = JSON.parse(localStorage.getItem('customer_data_quero_combos')) || null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderProducts();
+      updateCartUI();
+      loadSavedCustomerInfo();
+      registerCacheWorker();
+    });
+
+    // Filtro por Categoria
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.className = "category-btn bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition border border-slate-200/80 active:scale-95";
+      });
+      const btnId = 'btn-cat-' + cat.replace(/\s+/g, '-');
+      const activeBtn = document.getElementById(btnId);
+      if (activeBtn) {
+        activeBtn.className = "category-btn bg-purple-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm whitespace-nowrap transition active:scale-95";
+      }
+      renderProducts();
+    }
+
+    // Exibição dos Produtos (Sem Imagens, Layout Limpo e Otimizado)
+    function renderProducts() {
+      const container = document.getElementById('menu-sections');
+      const activeSections = currentCategory === 'todos' 
+        ? SECTION_ORDER 
+        : SECTION_ORDER.filter(sec => sec === currentCategory);
+
+      let html = '';
+      let hasAnyProduct = false;
+
+      activeSections.forEach(secName => {
+        const secProducts = products.filter(p => p.subcategory === secName);
+        if (secProducts.length > 0) {
+          hasAnyProduct = true;
+          const icon = CATEGORY_ICONS[secName] || '✨';
+          html += `
+            <section>
+              <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2 mb-2.5 px-0.5">
+                <span class="text-lg">${icon}</span> ${secName}
+              </h2>
+              <div class="space-y-2.5">
+                ${secProducts.map(product => `
+                  <div onclick="openProductModal('${product.id}')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/70 flex justify-between items-center cursor-pointer hover:border-purple-300 active:bg-slate-50 transition gap-3">
+                    <div class="flex-1 min-w-0">
+                      <h3 class="font-bold text-slate-800 text-xs sm:text-sm leading-snug">${product.title}</h3>
+                      <p class="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-relaxed">${product.description}</p>
+                      <div class="mt-2.5 flex items-center gap-2">
+                        <span class="text-[10px] text-slate-400 font-medium">${product.variants.length > 1 ? 'A partir de' : 'Preço:'}</span>
+                        <span class="text-purple-800 font-bold text-sm">R$ ${product.startPrice.toFixed(2).replace('.', ',')}</span>
+                      </div>
+                    </div>
+                    <button class="bg-purple-50 text-purple-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 shrink-0 hover:bg-purple-100 transition">
+                      <i class="fa-solid fa-plus text-[10px]"></i>
+                      <span>Pedir</span>
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </section>
+          `;
+        }
+      });
+
+      container.innerHTML = hasAnyProduct ? html : `<p class="text-center text-slate-400 py-8 text-sm">Nenhum item nesta categoria.</p>`;
+    }
+
+    // Modal do Produto
+    function openProductModal(productId) {
+      currentProduct = products.find(p => p.id === productId);
+      selectedVariant = currentProduct.variants[0];
+      selectedOptions = [];
+      currentQty = 1;
+
+      document.getElementById('modal-title').innerText = currentProduct.title;
+      document.getElementById('modal-description').innerText = currentProduct.description;
+      document.getElementById('modal-category-badge').innerText = `${CATEGORY_ICONS[currentProduct.category] || '✨'} ${currentProduct.category}`;
+
+      const variantSection = document.getElementById('variant-section');
+      if (currentProduct.variants.length > 1) {
+        variantSection.classList.remove('hidden');
+        document.getElementById('modal-variant-title').innerHTML = `<i class="fa-solid fa-circle-dot text-purple-700 text-xs"></i> ${currentProduct.variantTitle}`;
+        document.getElementById('variants-container').innerHTML = currentProduct.variants.map((v, index) => `
+          <label class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200/80 cursor-pointer active:bg-purple-50/50 transition min-h-[44px]">
+            <div class="flex items-center gap-2.5">
+              <input type="radio" name="product-variant" value="${index}" ${index === 0 ? 'checked' : ''} onchange="selectVariant(${index})" class="accent-purple-700 w-4 h-4">
+              <span class="text-xs font-semibold text-slate-800">${v.name}</span>
+            </div>
+            <span class="text-xs font-bold text-purple-800">R$ ${v.price.toFixed(2).replace('.', ',')}</span>
+          </label>
+        `).join('');
+      } else {
+        variantSection.classList.add('hidden');
+      }
+
+      const optionsSection = document.getElementById('options-section');
+      if (currentProduct.optionsGroup) {
+        optionsSection.classList.remove('hidden');
+        const group = currentProduct.optionsGroup;
+        document.getElementById('modal-options-title').innerText = group.title;
+        document.getElementById('modal-options-subtitle').innerText = group.subtitle;
+        document.getElementById('options-container').innerHTML = group.options.map(opt => `
+          <label class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200/80 cursor-pointer active:bg-purple-50/50 transition min-h-[44px]">
+            <span class="text-xs font-medium text-slate-700">${group.type === 'remove' ? '🚫 Tirar ' + opt : opt}</span>
+            <input type="checkbox" value="${opt}" onchange="toggleOption(this)" class="w-4 h-4 accent-purple-700 rounded">
+          </label>
+        `).join('');
+      } else {
+        optionsSection.classList.add('hidden');
+      }
+
+      updateModalUI();
+      document.getElementById('product-modal').classList.remove('hidden');
+    }
+
+    function selectVariant(index) {
+      selectedVariant = currentProduct.variants[index];
+      updateModalUI();
+    }
+
+    function toggleOption(checkbox) {
+      const group = currentProduct.optionsGroup;
+      if (!group) return;
+
+      if (checkbox.checked) {
+        if (selectedOptions.length < group.max) {
+          selectedOptions.push(checkbox.value);
+        } else {
+          checkbox.checked = false;
+        }
+      } else {
+        selectedOptions = selectedOptions.filter(item => item !== checkbox.value);
+      }
+      updateModalUI();
+    }
+
+    function changeQty(delta) {
+      if (currentQty + delta >= 1) {
+        currentQty += delta;
+        updateModalUI();
+      }
+    }
+
+    function updateModalUI() {
+      document.getElementById('modal-qty').innerText = currentQty;
+      if (currentProduct.optionsGroup) {
+        const group = currentProduct.optionsGroup;
+        const counter = document.getElementById('options-counter');
+        counter.innerText = group.type === 'add' ? `${selectedOptions.length}/${group.max}` : `${selectedOptions.length} removido(s)`;
+      }
+      const totalPrice = (selectedVariant.price * currentQty).toFixed(2).replace('.', ',');
+      document.getElementById('modal-total-price').innerText = `R$ ${totalPrice}`;
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+    }
+
+    // Gerenciamento do Carrinho
+    function addToCart() {
+      const cartItem = {
+        cartId: Date.now(),
+        productId: currentProduct.id,
+        title: currentProduct.title,
+        variantName: selectedVariant.name,
+        price: selectedVariant.price,
+        optionsType: currentProduct.optionsGroup ? currentProduct.optionsGroup.type : null,
+        options: [...selectedOptions],
+        qty: currentQty,
+        total: selectedVariant.price * currentQty
+      };
+
+      cart.push(cartItem);
+      saveCart();
+      closeProductModal();
+      updateCartUI();
+    }
+
+    function saveCart() {
+      localStorage.setItem('cart_quero_combos', JSON.stringify(cart));
+    }
+
+    function updateCartUI() {
+      const cartBar = document.getElementById('cart-bar');
+      const totalCount = cart.reduce((acc, item) => acc + item.qty, 0);
+      const subtotalPrice = cart.reduce((acc, item) => acc + item.total, 0);
+
+      if (cart.length > 0) {
+        cartBar.classList.remove('hidden');
+        document.getElementById('cart-count').innerText = `${totalCount} ${totalCount === 1 ? 'item' : 'itens'}`;
+        
+        const deliveryFee = customerData ? customerData.deliveryFee : 0;
+        const finalTotal = subtotalPrice + deliveryFee;
+        
+        document.getElementById('cart-total').innerText = `R$ ${finalTotal.toFixed(2).replace('.', ',')}`;
+      } else {
+        cartBar.classList.add('hidden');
+      }
+    }
+
+    function openCartModal() {
+      const container = document.getElementById('cart-items-container');
+      if (cart.length === 0) {
+        container.innerHTML = `<p class="text-center text-slate-400 text-sm py-8">Seu carrinho está vazio.</p>`;
+      } else {
+        container.innerHTML = cart.map(item => {
+          let optionsText = '';
+          if (item.options.length > 0) {
+            optionsText = item.optionsType === 'remove' 
+              ? `<p class="text-xs text-red-600 font-medium mt-1">❌ Sem: ${item.options.join(', ')}</p>`
+              : `<p class="text-xs text-purple-700 font-medium mt-1">✨ Opções: ${item.options.join(', ')}</p>`;
+          }
+
+          return `
+            <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div class="flex-1">
+                <p class="font-bold text-sm text-slate-800">${item.title}</p>
+                <p class="text-xs font-semibold text-purple-800 mt-0.5">Opção: ${item.variantName}</p>
+                <p class="text-xs text-slate-500">Qtd: ${item.qty}x</p>
+                ${optionsText}
+                <p class="font-bold text-xs text-slate-800 mt-1">R$ ${item.total.toFixed(2).replace('.', ',')}</p>
+              </div>
+              <button onclick="removeFromCart(${item.cartId})" class="text-red-500 hover:text-red-700 p-2 text-sm active:scale-95">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      updateCartSummary();
+      document.getElementById('cart-modal').classList.remove('hidden');
+    }
+
+    function updateCartSummary() {
+      const subtotalPrice = cart.reduce((acc, item) => acc + item.total, 0);
+      document.getElementById('cart-subtotal').innerText = `R$ ${subtotalPrice.toFixed(2).replace('.', ',')}`;
+
+      if (customerData) {
+        document.getElementById('address-btn-text').innerText = "Alterar";
+        document.getElementById('summary-address-text').innerText = `${customerData.street}, Nº ${customerData.number} (${customerData.name})`;
+        document.getElementById('cart-distance-text').innerText = `${customerData.distanceKm.toFixed(1)} km`;
+        
+        if (customerData.deliveryFee === 0) {
+          document.getElementById('cart-delivery-fee').innerHTML = `<span class="text-emerald-600 font-bold">GRÁTIS</span>`;
+        } else {
+          document.getElementById('cart-delivery-fee').innerText = `R$ ${customerData.deliveryFee.toFixed(2).replace('.', ',')}`;
+        }
+
+        const finalTotal = subtotalPrice + customerData.deliveryFee;
+        document.getElementById('cart-final-total').innerText = `R$ ${finalTotal.toFixed(2).replace('.', ',')}`;
+      } else {
+        document.getElementById('address-btn-text').innerText = "Cadastrar Endereço";
+        document.getElementById('summary-address-text').innerText = "Cadastre o endereço para calcular o frete.";
+        document.getElementById('cart-distance-text').innerText = "0 km";
+        document.getElementById('cart-delivery-fee').innerText = "R$ 0,00";
+        document.getElementById('cart-final-total').innerText = `R$ ${subtotalPrice.toFixed(2).replace('.', ',')}`;
+      }
+    }
+
+    function removeFromCart(cartId) {
+      cart = cart.filter(item => item.cartId !== cartId);
+      saveCart();
+      updateCartUI();
+      openCartModal();
+    }
+
+    function clearCart() {
+      cart = [];
+      saveCart();
+      updateCartUI();
+      closeCartModal();
+    }
+
+    function closeCartModal() {
+      document.getElementById('cart-modal').classList.add('hidden');
+    }
+
+    // Modal e Cálculo de Endereço via API do Google Maps
+    function openAddressModal() {
+      if (customerData) {
+        document.getElementById('user-name').value = customerData.name || '';
+        document.getElementById('user-street').value = customerData.street || '';
+        document.getElementById('user-number').value = customerData.number || '';
+        document.getElementById('user-complement').value = customerData.complement || '';
+      }
+      document.getElementById('address-modal').classList.remove('hidden');
+    }
+
+    function closeAddressModal() {
+      document.getElementById('address-modal').classList.add('hidden');
+    }
+
+    function loadSavedCustomerInfo() {
+      if (customerData) {
+        updateCartSummary();
+      }
+    }
+
+    // Cálculo da Taxa de Entrega:
+    // <= 3km: Grátis (R$ 0,00)
+    // > 3km: R$ 1,50 por km com valor mínimo de R$ 7,00
+    function calculateDeliveryFee(distanceKm) {
+      if (distanceKm <= 3.0) {
+        return 0;
+      }
+      const PRICE_PER_KM = 1.50;
+      const MIN_FEE = 7.00;
+      const fee = distanceKm * PRICE_PER_KM;
+      return Math.max(MIN_FEE, fee);
+    }
+
+    function saveAddressAndCalculate() {
+      const name = document.getElementById('user-name').value.trim();
+      const street = document.getElementById('user-street').value.trim();
+      const number = document.getElementById('user-number').value.trim();
+      const complement = document.getElementById('user-complement').value.trim();
+
+      if (!name || !street || !number) {
+        alert("Por favor, preencha o Nome, Endereço e Número da casa.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-address');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Calculando...</span>`;
+
+      const destinationAddress = `${street}, ${number}, Ponta Grossa - PR, Brasil`;
+
+      if (typeof google !== 'undefined' && google.maps && google.maps.DistanceMatrixService) {
+        const service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+          origins: [STORE_ADDRESS],
+          destinations: [destinationAddress],
+          travelMode: 'DRIVING',
+          unitSystem: google.maps.UnitSystem.METRIC
+        }, (response, status) => {
+          btn.disabled = false;
+          btn.innerHTML = `<span>Calcular Taxa e Salvar</span>`;
+
+          if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
+            const distanceMeters = response.rows[0].elements[0].distance.value;
+            const distanceKm = distanceMeters / 1000;
+            const deliveryFee = calculateDeliveryFee(distanceKm);
+
+            customerData = { name, street, number, complement, distanceKm, deliveryFee };
+            localStorage.setItem('customer_data_quero_combos', JSON.stringify(customerData));
+
+            closeAddressModal();
+            updateCartSummary();
+            updateCartUI();
+          } else {
+            alert("Não conseguimos localizar seu endereço exato. Por favor, verifique a rua e o número.");
+          }
+        });
+      } else {
+        // Fallback local caso a API ainda não esteja configurada
+        btn.disabled = false;
+        btn.innerHTML = `<span>Calcular Taxa e Salvar</span>`;
+
+        const simulatedKm = 4.5;
+        const deliveryFee = calculateDeliveryFee(simulatedKm);
+
+        customerData = { name, street, number, complement, distanceKm: simulatedKm, deliveryFee };
+        localStorage.setItem('customer_data_quero_combos', JSON.stringify(customerData));
+
+        closeAddressModal();
+        updateCartSummary();
+        updateCartUI();
+      }
+    }
+
+    // Checkout e Validação de Pedido
+    function processCheckout() {
+      if (cart.length === 0) return;
+
+      if (!customerData) {
+        alert("Por favor, informe seu endereço de entrega antes de finalizar o pedido.");
+        openAddressModal();
+        return;
+      }
+
+      const subtotalPrice = cart.reduce((acc, item) => acc + item.total, 0);
+      const deliveryFee = customerData.deliveryFee;
+      const finalTotal = subtotalPrice + deliveryFee;
+
+      let text = `*Novo Pedido - Quero combos e lanches*\n\n`;
+      text += `👤 *Cliente:* ${customerData.name}\n`;
+      text += `📍 *Endereço:* ${customerData.street}\n`;
+      text += `🏠 *Número:* ${customerData.number}\n`;
+      if (customerData.complement) {
+        text += `📌 *Complemento:* ${customerData.complement}\n`;
+      }
+      text += `📏 *Distância da Loja:* ${customerData.distanceKm.toFixed(1)} km\n\n`;
+
+      text += `*Itens do Pedido:*\n`;
+      cart.forEach(item => {
+        text += `• *${item.qty}x ${item.title}*\n`;
+        text += `  Opção: _${item.variantName}_\n`;
+        if (item.options.length > 0) {
+          if (item.optionsType === 'remove') {
+            text += `  _Retirar: ${item.options.join(', ')}_\n`;
+          } else {
+            text += `  _Opções: ${item.options.join(', ')}_\n`;
+          }
+        }
+        text += `  Valor: R$ ${item.total.toFixed(2).replace('.', ',')}\n\n`;
+      });
+
+      text += `──────────────\n`;
+      text += `Subtotal: R$ ${subtotalPrice.toFixed(2).replace('.', ',')}\n`;
+      text += `🚚 Entrega: ${deliveryFee === 0 ? 'GRÁTIS' : 'R$ ' + deliveryFee.toFixed(2).replace('.', ',')}\n`;
+      text += `💰 *Total Final: R$ ${finalTotal.toFixed(2).replace('.', ',')}*`;
+
+      const encodedText = encodeURIComponent(text);
+      window.open(`https://wa.me/${TARGET_WHATSAPP}?text=${encodedText}`, '_blank');
+    }
+
+    // Service Worker Offline
+    function registerCacheWorker() {
+      if ('serviceWorker' in navigator) {
+        const swCode = `
+          const CACHE_NAME = 'quero-combos-v9';
+          self.addEventListener('install', e => {
+            e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./'])));
+          });
+          self.addEventListener('fetch', e => {
+            e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+          });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(workerUrl).catch(() => {});
+      }
+    }
+  </script>
+</body>
+</html>
